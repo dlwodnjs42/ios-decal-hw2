@@ -13,7 +13,7 @@ class ViewController: UIViewController {
     var w: CGFloat!
     var h: CGFloat!
     
-
+    
     // IMPORTANT: Do NOT modify the name or class of resultLabel.
     //            We will be using the result label to run autograded tests.
     // MARK: The label to display our calculations
@@ -21,9 +21,16 @@ class ViewController: UIViewController {
     
     // TODO: This looks like a good place to add some data structures.
     //       One data structure is initialized below for reference.
-    var someDataStructure: [String] = [""]
     
-
+    var someDataStructure: [String] = []
+    var stillWriting = false
+    var Operations: [String] = []
+    var numbPressed = false
+    var bad = false
+    
+    
+    let alert = UIAlertController(title: "You can't divide by 0", message: nil, preferredStyle: UIAlertControllerStyle.alert)
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view = UIView(frame: UIScreen.main.bounds)
@@ -46,13 +53,19 @@ class ViewController: UIViewController {
     // TODO: A method to update your data structure(s) would be nice.
     //       Modify this one or create your own.
     func updateSomeDataStructure(_ content: String) {
-        print("Update me like one of those PCs")
+        someDataStructure.append(content)
     }
     
     // TODO: Ensure that resultLabel gets updated.
     //       Modify this one or create your own.
     func updateResultLabel(_ content: String) {
-        print("Update me like one of those PCs")
+        if stillWriting {
+            resultLabel.text = resultLabel.text! + content
+        }
+        else {
+            resultLabel.text = content
+            stillWriting = true
+        }
     }
     
     
@@ -66,13 +79,63 @@ class ViewController: UIViewController {
     //       Modify this one or create your own.
     func intCalculate(a: Int, b:Int, operation: String) -> Int {
         print("Calculation requested for \(a) \(operation) \(b)")
+        if operation == "/" && b == 0 {
+            
+            alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil))
+            self.present(alert, animated: true, completion: nil)
+            bad = true
+        }
+        else {
+            
+            
+            switch operation {
+            case "+":
+                return a+b
+            case "-":
+                return a-b
+            case "/":
+                return a/b
+            case "*":
+                return a*b
+            default:
+                print("error")
+            }
+        }
         return 0
     }
     
     // TODO: A general calculate method for doubles
     //       Modify this one or create your own.
     func calculate(a: String, b:String, operation: String) -> Double {
-        print("Calculation requested for \(a) \(operation) \(b)")
+        guard Double(a) != nil else { return 0.0}
+        let DoubleA = Double(a)
+        guard Double(b) != nil else { return 0.0}
+        let DoubleB = Double(b)
+        
+        if operation == "/" && DoubleB == 0 {
+            
+            alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil))
+            self.present(alert, animated: true, completion: nil)
+            bad = true
+            
+            
+        } else {
+            
+            switch operation {
+            case "+":
+                return DoubleA!+DoubleB!
+            case "-":
+                return DoubleA!-DoubleB!
+            case "/":
+                return DoubleA!/DoubleB!
+            case "*":
+                return DoubleA!*DoubleB!
+            default:
+                print("error")
+            }
+            print("Calculation requested for \(a) \(operation) \(b)")
+            
+        }
         return 0.0
     }
     
@@ -80,17 +143,130 @@ class ViewController: UIViewController {
     func numberPressed(_ sender: CustomButton) {
         guard Int(sender.content) != nil else { return }
         print("The number \(sender.content) was pressed")
-        // Fill me in!
+        print(resultLabel.text!.characters.count)
+        if resultLabel.text!.characters.count < 7 {
+            updateResultLabel(sender.content)
+            numbPressed = true
+            
+        }
     }
+    
+    func isIn(b: Character) -> Bool {
+        for t in someDataStructure {
+            for c in t.characters {
+                
+                if c == b{
+                    return true
+                }
+            }
+        }
+        return false
+    }
+    
+    func mod_check(firstnumber: String, secondnumber: String) -> Bool {
+        let IntA = Int(firstnumber)
+        let IntB = Int(secondnumber)
+        if IntB != 0 {
+            if IntA! % IntB! != 0 {
+                return true
+            }
+        }
+        return false
+        
+    }
+    
     
     // REQUIRED: The responder to an operator button being pressed.
     func operatorPressed(_ sender: CustomButton) {
-        // Fill me in!
+        
+        if sender.content != "C" && sender.content != "+/-" && sender.content != "%" {
+            Operations.append(sender.content)
+            if numbPressed {
+                stillWriting = false
+                updateSomeDataStructure(resultLabel.text!)
+                if someDataStructure.count >= 2 {
+                    var calc = 0
+                    var dcalc = 0.0
+                    if sender.content == "=" {
+                        print(Operations)
+                        
+                        
+                        
+                        if isIn(b: ".") || (mod_check(firstnumber: someDataStructure.first!, secondnumber: someDataStructure.last!) && Operations.first == "/")  {
+                            dcalc = calculate(a: someDataStructure.removeFirst(), b: someDataStructure.removeLast(), operation:
+                                Operations.removeFirst())
+                            updateResultLabel("\(dcalc)")
+                        }
+                            
+                        else if !isIn(b: ".") {
+                            calc = intCalculate(a: Int(someDataStructure.removeFirst())!,b: Int(someDataStructure.removeLast())!, operation: Operations.removeFirst())
+                            updateResultLabel("\(calc)")
+                        }
+                        Operations.removeFirst()
+                        
+                    }
+                    else {
+                        if isIn(b: ".") || (mod_check(firstnumber: someDataStructure.first!, secondnumber: someDataStructure.last!) && Operations.first == "/")  {
+                            dcalc = calculate(a: someDataStructure.removeFirst(), b: someDataStructure.removeLast(), operation: Operations.removeFirst())
+                            updateResultLabel("\(dcalc)")
+                        }
+                            
+                        else if !isIn(b: ".") {
+                            calc = intCalculate(a: Int(someDataStructure.removeFirst())!,b: Int(someDataStructure.removeLast())!, operation: Operations.removeFirst())
+                            updateResultLabel("\(calc)")
+                        }
+                        
+                        
+                        
+                        
+                    }
+                    if bad == false {
+                        someDataStructure.append(resultLabel.text!)
+                    } else {
+                        Operations.removeAll()
+                        someDataStructure.removeAll()
+                        
+                    }
+                    stillWriting = false
+                    numbPressed = false
+                    bad = false
+                    
+                }
+            }
+        } else {
+            switch sender.content{
+            case "C":
+                someDataStructure.removeAll()
+                stillWriting = false
+                updateResultLabel("0")
+                stillWriting = false
+                Operations.removeAll()
+            case "+/-":
+                if (resultLabel.text! as NSString).doubleValue > 0 {
+                    stillWriting = false
+                    updateResultLabel("-" + resultLabel.text!)
+                } else if (isIn(b:"-")) {
+                    resultLabel.text!.remove(at: resultLabel.text!.startIndex)
+                    stillWriting = false
+                    updateResultLabel(resultLabel.text!)
+                }
+            case "%":
+                let t = Double(resultLabel.text!)
+                stillWriting = false
+                updateResultLabel("\(t!/100)")
+                
+            default:
+                print("doenst work")
+            }
+        }
     }
     
     // REQUIRED: The responder to a number or operator button being pressed.
     func buttonPressed(_ sender: CustomButton) {
-       // Fill me in!
+        updateResultLabel(sender.content)
+        numbPressed = true
+        
+        
     }
     
     // IMPORTANT: Do NOT change any of the code below.
@@ -123,7 +299,7 @@ class ViewController: UIViewController {
             guard let container = element as? UIView else { return }
             container.backgroundColor = UIColor.black
         }
-
+        
         let margin: CGFloat = 1.0
         let buttonWidth: CGFloat = w / 4.0
         let buttonHeight: CGFloat = 100.0
@@ -133,9 +309,9 @@ class ViewController: UIViewController {
             let x = (CGFloat(i%3) + 1.0) * margin + (CGFloat(i%3) * buttonWidth)
             let y = (CGFloat(i/3) + 1.0) * margin + (CGFloat(i/3) * buttonHeight)
             calcContainer.addUIElement(CustomButton(content: el), text: el,
-            frame: CGRect(x: x, y: y, width: buttonWidth, height: buttonHeight)) { element in
-                guard let button = element as? UIButton else { return }
-                button.addTarget(self, action: #selector(operatorPressed), for: .touchUpInside)
+                                       frame: CGRect(x: x, y: y, width: buttonWidth, height: buttonHeight)) { element in
+                                        guard let button = element as? UIButton else { return }
+                                        button.addTarget(self, action: #selector(operatorPressed), for: .touchUpInside)
             }
         }
         // MARK: Second Row 3x3
@@ -143,9 +319,9 @@ class ViewController: UIViewController {
             let x = (CGFloat(i%3) + 1.0) * margin + (CGFloat(i%3) * buttonWidth)
             let y = (CGFloat(i/3) + 1.0) * margin + (CGFloat(i/3) * buttonHeight)
             calcContainer.addUIElement(CustomButton(content: digit), text: digit,
-            frame: CGRect(x: x, y: y+101.0, width: buttonWidth, height: buttonHeight)) { element in
-                guard let button = element as? UIButton else { return }
-                button.addTarget(self, action: #selector(numberPressed), for: .touchUpInside)
+                                       frame: CGRect(x: x, y: y+101.0, width: buttonWidth, height: buttonHeight)) { element in
+                                        guard let button = element as? UIButton else { return }
+                                        button.addTarget(self, action: #selector(numberPressed), for: .touchUpInside)
             }
         }
         // MARK: Vertical Column of Operators
@@ -153,11 +329,11 @@ class ViewController: UIViewController {
             let x = (CGFloat(3) + 1.0) * margin + (CGFloat(3) * buttonWidth)
             let y = (CGFloat(i) + 1.0) * margin + (CGFloat(i) * buttonHeight)
             calcContainer.addUIElement(CustomButton(content: el), text: el,
-            frame: CGRect(x: x, y: y, width: buttonWidth, height: buttonHeight)) { element in
-                guard let button = element as? UIButton else { return }
-                button.backgroundColor = UIColor.orange
-                button.setTitleColor(UIColor.white, for: .normal)
-                button.addTarget(self, action: #selector(operatorPressed), for: .touchUpInside)
+                                       frame: CGRect(x: x, y: y, width: buttonWidth, height: buttonHeight)) { element in
+                                        guard let button = element as? UIButton else { return }
+                                        button.backgroundColor = UIColor.orange
+                                        button.setTitleColor(UIColor.white, for: .normal)
+                                        button.addTarget(self, action: #selector(operatorPressed), for: .touchUpInside)
             }
         }
         // MARK: Last Row for big 0 and .
@@ -165,12 +341,12 @@ class ViewController: UIViewController {
             let myWidth = buttonWidth * (CGFloat((i+1)%2) + 1.0) + margin * (CGFloat((i+1)%2))
             let x = (CGFloat(2*i) + 1.0) * margin + buttonWidth * (CGFloat(i*2))
             calcContainer.addUIElement(CustomButton(content: el), text: el,
-            frame: CGRect(x: x, y: 405, width: myWidth, height: buttonHeight)) { element in
-                guard let button = element as? UIButton else { return }
-                button.addTarget(self, action: #selector(buttonPressed), for: .touchUpInside)
+                                       frame: CGRect(x: x, y: 405, width: myWidth, height: buttonHeight)) { element in
+                                        guard let button = element as? UIButton else { return }
+                                        button.addTarget(self, action: #selector(buttonPressed), for: .touchUpInside)
             }
         }
     }
-
+    
 }
 
